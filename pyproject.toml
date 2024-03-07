@@ -13,12 +13,12 @@ python = "^3.11"
 fastapi = "^0.110.0"
 pydantic = "^2.6.3"
 pydantic-settings = "^2.2.1"
+uvicorn = "^0.27.1"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.2"
 mypy = "^1.8.0"
-uvicorn = "^0.27.1"
 
 [build-system]
 requires = ["poetry-core"]
