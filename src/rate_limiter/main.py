@@ -1,29 +1,19 @@
+import logging
 import time
-from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict
 
 import uvicorn
-from fastapi import FastAPI, Response, status
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from fastapi import FastAPI, Request, Response, status
 
+from rate_limiter.settings import BucketRecord, Settings
+
+logging.basicConfig(level=logging.INFO)
+settings = Settings()
+
+logging.info(settings)
 app = FastAPI()
 
-
-@dataclass
-class BucketRecord:
-    last_update: float
-    tokens: int
-
-
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="RATE_LIMITER_", case_sensitive=False)
-
-    bucket: Dict[int | str, BucketRecord] = {}
-
-    limit: Optional[int] = Field(default=None)
-    number_of_tokens: int = Field(default=3)
-    window: int = Field(default=10)
+BUCKET: Dict[int | str, BucketRecord] = {}
 
 
 @app.get("/health-check")
@@ -32,11 +22,16 @@ def health_check(response: Response):
     return {"status": "OK"}
 
 
-@app.get("/{user_id}")
-def check_rate(user_id: int | str, response: Response):
+@app.get("/")
+def check_rate(response: Response, request: Request):
+    if not request.client or not request.client.host:
+        response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
+        return {"status": "ERROR"}
+
+    user_id = request.client.host
     fill(user_id)
-    if settings.bucket[user_id].tokens > 0:
-        settings.bucket[user_id].tokens -= 1
+    if BUCKET[user_id].tokens > 0:
+        BUCKET[user_id].tokens -= 1
         response.status_code = status.HTTP_200_OK
         return {"status": "OK"}
     response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
@@ -45,11 +40,11 @@ def check_rate(user_id: int | str, response: Response):
 
 def fill(user_id: int | str):
     current_time = time.time()
-    if user_id not in settings.bucket:
-        settings.bucket[user_id] = BucketRecord(current_time, settings.number_of_tokens)
+    if user_id not in BUCKET:
+        BUCKET[user_id] = BucketRecord(current_time, settings.number_of_tokens)
         return
 
-    user_record = settings.bucket[user_id]
+    user_record = BUCKET[user_id]
     time_passed = int(current_time - user_record.last_update)
     if time_passed > settings.window:
         new_value = settings.number_of_tokens
@@ -67,9 +62,3 @@ def fill(user_id: int | str):
             window_on_top = time_passed % settings.window
             user_record.last_update = time.time() - window_on_top
         user_record.tokens = new_value
-
-
-if __name__ == "__main__":
-    settings = Settings()
-    print(settings)
-    uvicorn.run(app)
