@@ -18,6 +18,15 @@ uvicorn = "^0.27.1"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.2"
 mypy = "^1.8.0"
+httpx = "^0.27.0"
+coverage = "^7.4.3"
+trio = "^0.24.0"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["poetry-core"]
