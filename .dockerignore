@@ -1,0 +1,14 @@
+**/.DS_Store
+**/__pycache__
+**/.venv
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/docker-compose*
+**/compose*
+**/Dockerfile*
+LICENSE
+README.md
