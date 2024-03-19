@@ -42,6 +42,22 @@ In order to set the limits of adjust the window correct the values in **example.
 * Flexible rate limit configurations
 * Easy integration into the applications
 
+## Development
+
+For running test install correcponding dependancies
+```bash
+poetry install --with dev
+```
+
+### Running load tests
+
+```bash
+cd tests/
+locust
+```
+
+Then open http://localhost:8089/ in your browser for configuring numbers of running users
+
 ## Contributing
 
 Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request on GitHub.
