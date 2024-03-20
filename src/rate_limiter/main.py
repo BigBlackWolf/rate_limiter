@@ -6,7 +6,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response, status, Depends
 
 from rate_limiter.settings import settings
-from rate_limiter.storage import get_storage, DB, refill
+from rate_limiter.storage import get_storage, DB
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,7 +21,7 @@ def health_check(response: Response):
 
 
 @app.get("/")
-def check_rate(response: Response, request: Request, db: DB = Depends(get_storage)):
+def check_rate(response: Response, request: Request, db = Depends(get_storage)):
     user_id = request.headers.get("userId", "")
     if not user_id:
         raise HTTPException(
@@ -38,3 +38,30 @@ def check_rate(response: Response, request: Request, db: DB = Depends(get_storag
     raise HTTPException(
         detail="Too many requests", status_code=status.HTTP_429_TOO_MANY_REQUESTS
     )
+
+
+def refill(user_id: str, db: DB) -> None:
+    current_time = time.time()
+    if user_id not in db:
+        db[user_id] = current_time, settings.number_of_tokens
+        return
+
+    user_record = db[user_id]
+    time_passed = int(current_time - user_record.last_update)
+    if time_passed >= settings.window:
+        new_value = settings.number_of_tokens
+        new_time = time.time()
+
+        if settings.limit:
+            mulitplier = int(time_passed // settings.window)
+            new_value = min(
+                user_record.tokens + settings.number_of_tokens * mulitplier,
+                settings.limit,
+            )
+
+            # Deducting time, which is above window time to keep window follow static periods
+            # e.g. window = 3, time_passed = 4 secs -> deducting 1 second and set is an update time
+            window_on_top = time_passed % settings.window
+            new_time = time.time() - window_on_top
+
+        db[user_id] = new_time, new_value

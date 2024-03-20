@@ -41,6 +41,7 @@ In order to set the limits of adjust the window correct the values in **example.
 * Support in-memory tracking request counts
 * Flexible rate limit configurations
 * Easy integration into the applications
+* Support for both in-memory and Redis storage for tracking request counts
 
 ## Development
 

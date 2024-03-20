@@ -37,7 +37,7 @@ class DB:
     def __setitem__(self, key: str, value: Tuple[float, int]) -> None:
         new_value = BucketRecord(*value)
         if isinstance(self.client, dict):
-            self.client[key] = value
+            self.client[key] = new_value
         else:
             self.client.set(key, new_value.serialize())
     
