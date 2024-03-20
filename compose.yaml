@@ -4,3 +4,13 @@ services:
       context: .
     ports:
       - 8000:8000
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - '6379:6379'
+    volumes: 
+      - cache:/data2
+
+volumes:
+  cache:
+    driver: local

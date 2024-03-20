@@ -5,12 +5,6 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclass
-class BucketRecord:
-    last_update: float
-    tokens: int
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="RATE_LIMITER_",
@@ -22,3 +16,8 @@ class Settings(BaseSettings):
     limit: Optional[int] = Field(default=None)
     number_of_tokens: int = Field(default=3)
     window: int = Field(default=10)
+    redis_host: Optional[str] = Field(default=None)
+    redis_port: Optional[int] = Field(default=None)
+
+
+settings = Settings()

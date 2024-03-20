@@ -7,17 +7,20 @@ import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
-from rate_limiter.main import app, BUCKET, settings
-from rate_limiter.settings import Settings
+from rate_limiter.main import app, settings
+from rate_limiter.storage import get_storage
 
 
 @pytest.fixture(scope="function")
 async def test_client():
+    settings.redis_host = None
+    settings.redis_port = None
+    
     transport = httpx.ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
-    BUCKET.clear()
+    get_storage().client.clear()
 
 
 @pytest.fixture
